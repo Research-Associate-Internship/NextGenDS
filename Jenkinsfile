@@ -14,7 +14,7 @@ pipeline {
 
             stage('Build image') {
             steps {
-                sh 'docker build -t 853931821519.dkr.ecr.us-east-1.amazonaws.com/devsecops-registry:${BUILD_NUMBER} .'
+                sh 'docker build -t 853931821519.dkr.ecr.us-east-1.amazonaws.com/devsecops-registry:v${BUILD_NUMBER} .'
                 
             }
 
@@ -31,7 +31,7 @@ pipeline {
 
         stage('Push image to registry') {
             steps {
-                sh 'docker push 853931821519.dkr.ecr.us-east-1.amazonaws.com/devsecops-registry:${BUILD_NUMBER}'
+                sh 'docker push 853931821519.dkr.ecr.us-east-1.amazonaws.com/devsecops-registry:v${BUILD_NUMBER}'
             }
         }
 
