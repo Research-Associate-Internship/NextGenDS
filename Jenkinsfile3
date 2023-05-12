@@ -46,7 +46,7 @@ pipeline {
         stage("ecr authentication") {
           steps {
             withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                    dir("${WORKSPACE}/kubernetes") {
+                    dir("${WORKSPACE}/") {
                     sh 'kubectl create secret docker-registry ecr-secret \
                         --docker-server=${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com \
                         --docker-username=AWS \
@@ -59,7 +59,7 @@ pipeline {
         
         stage("kubernetes deployment") {
           steps {
-            dir("${WORKSPACE}/kubernetes") {
+            dir("${WORKSPACE}/") {
             script {
                 sh "sed -i 's/devsecops-registry/devsecops-registry:v${BUILD_NUMBER}/g' deployment.yaml"
                 }
