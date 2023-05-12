@@ -4,11 +4,6 @@ pipeline {
         label 'workernode1'
     }
 
-      // Add an environment variable that contains the credentials for dockerhub defined in jenkins credentials settings
-    environment {
-        DOCKERHUB_CREDENTIALS=credentials('docker_registry')
-    }
-
     stages {
         stage('Checkout') {
             steps {
