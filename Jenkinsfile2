@@ -1,0 +1,62 @@
+pipeline {
+    // define which exact agent you want to run these instructions
+    agent {
+        label 'workernode1'
+    }
+
+    stages {
+       stage('Checkout') {
+            steps {
+                // Get some code from a GitHub repository
+                //checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'PAT-github', url: 'https://github.com/hchoi3/k8s-hello-node.git']])
+                checkout scm 
+            }
+        }
+
+        stage("Set up kube config") {
+          steps {
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                sh 'aws eks --region us-east-1 update-kubeconfig --name NextGenDS-cluster'
+            }
+          }
+        }
+
+
+        stage("ecr authentication") {
+          steps {
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    dir("${WORKSPACE}/kubernetes") {
+                    sh 'kubectl create secret docker-registry ecr-secret \
+                        --docker-server=${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com \
+                        --docker-username=AWS \
+                        --docker-password=$(aws ecr get-login-password) \
+                        --namespace=default'
+                    }
+            }
+          }
+        }
+        
+        stage("kubernetes deployment") {
+          steps {
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    dir("${WORKSPACE}/kubernetes") {
+                    sh 'kubectl apply -f deployment.yml'
+                    sh 'kubectl apply -f service-external.yml'
+                    }
+            }
+          }
+        }
+
+    } 
+
+    post{
+        always {  
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+            sh 'kubectl delete secret ecr-secret'
+            }
+            cleanWs()
+
+        }      
+    }
+
+}

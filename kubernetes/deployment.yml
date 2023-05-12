@@ -1,0 +1,54 @@
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: "k8s-node"
+  namespace: "default"
+  labels:
+    app: "k8s-node"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "k8s-node"
+  template:
+    metadata:
+      labels:
+        app: "k8s-node"
+    spec:
+      containers:
+        - name: "k8s-hello-node"
+          image: "853931821519.dkr.ecr.us-east-1.amazonaws.com/devsecops-registry:v1"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+      imagePullSecrets:
+      - name: ecr-secret
+
+---
+#autoscaling/v1
+# apiVersion: "autoscaling/v2beta1"
+# kind: "HorizontalPodAutoscaler"
+# metadata:
+#   name: "k8s-node-hpa"
+#   namespace: "default"
+#   labels:
+#     app: "k8s-node"
+# spec:
+#   scaleTargetRef:
+#     kind: "Deployment"
+#     name: "k8s-node"
+#     apiVersion: "apps/v1beta1"
+#   minReplicas: 1
+#   maxReplicas: 5
+#   metrics:
+#     - type: "Resource"
+#       resource:
+#         name: "cpu"
+#         targetAverageUtilization: 80
+# must install a crd that allows for this like a metrics server
+#will look into later
