@@ -8,7 +8,6 @@ pipeline {
        stage('Checkout') {
             steps {
                 // Get some code from a GitHub repository
-                //checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'PAT-github', url: 'https://github.com/hchoi3/k8s-hello-node.git']])
                 checkout scm 
             }
         }
