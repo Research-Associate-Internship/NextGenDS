@@ -9,7 +9,7 @@ metadata:
   namespace: hello-app
 spec:
   rules:
-    - host: betty.eks.intern.aws.labshare.org
+    - host: nextgends.axle-interns.com
       http:
         paths:
           - path: /
@@ -22,5 +22,5 @@ spec:
   # This section is only required if TLS is to be enabled for the Ingress
   tls:
     - hosts:
-      - betty.eks.intern.aws.labshare.org
+      - nextgends.axle-interns.com
       secretName: hello-tls
