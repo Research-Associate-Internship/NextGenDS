@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  # annotations:
-  #   nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "true"
   name: k8s-node-ingress
   namespace: default
 spec:
@@ -19,7 +19,4 @@ spec:
                 name: k8s-node-internal
                 port: 
                   number: 80
-  #This section is only required if TLS is to be enabled for the Ingress
-  # tls:
-  #   - hosts:
-  #     - nextgendstest.axle-interns.com
+
