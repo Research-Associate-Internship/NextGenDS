@@ -1,3 +1,5 @@
+#Optional can use this instead of ingress and internal service.
+#Set this up and configure an application load balancer to target this nodeport.
 apiVersion: v1
 kind: Service
 metadata:
