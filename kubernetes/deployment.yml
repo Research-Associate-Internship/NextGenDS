@@ -30,24 +30,23 @@ spec:
       - name: ecr-secret
 
 ---
-#autoscaling/v1
-# apiVersion: "autoscaling/v2beta1"
-# kind: "HorizontalPodAutoscaler"
-# metadata:
-#   name: "k8s-node-hpa"
-#   namespace: "default"
-#   labels:
-#     app: "k8s-node"
-# spec:
-#   scaleTargetRef:
-#     kind: "Deployment"
-#     name: "k8s-node"
-#     apiVersion: "apps/v1beta1"
-#   minReplicas: 1
-#   maxReplicas: 5
-#   metrics:
-#     - type: "Resource"
-#       resource:
-#         name: "cpu"
-#         targetAverageUtilization: 80
 # must use kuberentes version 1.24 and below to use
+apiVersion: "autoscaling/v2beta1"
+kind: "HorizontalPodAutoscaler"
+metadata:
+  name: "k8s-node-hpa"
+  namespace: "default"
+  labels:
+    app: "k8s-node"
+spec:
+  scaleTargetRef:
+    kind: "Deployment"
+    name: "k8s-node"
+    apiVersion: "apps/v1beta1"
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: "Resource"
+      resource:
+        name: "cpu"
+        targetAverageUtilization: 80
