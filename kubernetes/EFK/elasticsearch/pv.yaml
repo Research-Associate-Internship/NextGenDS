@@ -12,7 +12,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: standard
   hostPath:
-    path: /usr/share/elasticsearch/data
+    path: /mnt/data
 
 ---
 apiVersion: v1
@@ -28,7 +28,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: standard
   hostPath:
-    path: /usr/share/elasticsearch/data1
+    path: /mnt/data1
 
 ---
 apiVersion: v1
@@ -44,4 +44,4 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: standard
   hostPath:
-    path: /usr/share/elasticsearch/data2
+    path: /mnt/data2
