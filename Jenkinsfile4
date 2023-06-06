@@ -1,0 +1,87 @@
+pipeline {
+    // define the exact agent you want to use to run these jobs via label
+    agent {
+        label 'workernode1'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Get some code from a GitHub repository
+                checkout scm 
+            }
+        }
+
+            stage('Build image') {
+            steps {
+                sh 'docker build -t 853931821519.dkr.ecr.us-east-1.amazonaws.com/devsecops-registry:v${BUILD_NUMBER} .'
+                
+            }
+
+        }
+
+        
+        stage('Login to Docker Hub') {
+            steps {
+                withCredentials([[$class: 'VaultUsernamePasswordCredentialBinding', credentialsId: 'vault-ecr', passwordVariable: 'PASS', usernameVariable: 'USER']]) {
+                sh 'echo $PASS | docker login -u $USER --password-stdin 853931821519.dkr.ecr.us-east-1.amazonaws.com'
+                }
+            }
+        }
+
+        stage('Push image to registry') {
+            steps {
+                sh 'docker push 853931821519.dkr.ecr.us-east-1.amazonaws.com/devsecops-registry:v${BUILD_NUMBER}'
+            }
+        }
+        
+        stage("Set up kube config") {
+          steps {
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                sh 'aws eks --region us-east-1 update-kubeconfig --name NextGenDS-cluster'
+            }
+          }
+        }
+
+        stage("ecr authentication") {
+          steps {
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    dir("${WORKSPACE}/kubernetes") {
+                    sh 'kubectl create secret docker-registry ecr-secret \
+                        --docker-server=${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com \
+                        --docker-username=AWS \
+                        --docker-password=$(aws ecr get-login-password) \
+                        --namespace=default'
+                    }
+            }
+          }
+        }
+        
+        stage("kubernetes deployment") {
+          steps {
+            dir("${WORKSPACE}/kubernetes") {
+            script {
+                sh "sed -i 's/devsecops-registry/devsecops-registry:v${BUILD_NUMBER}/g' deployment.yml"
+                }
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                //sh 'kubectl apply -f deployment.yml'
+                sh 'kubectl apply -f service-internal.yml'
+                sh 'kubectl apply -f ingress.yml'
+                    
+            }
+          }
+          }
+        }
+    }
+// after all instructions are ran this makes sure to log out of your registry   
+post{
+    always {  
+      sh 'docker logout'
+      withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+        sh 'kubectl delete secret ecr-secret'
+        }  
+      cleanWs()       
+    }      
+  }
+
+}
