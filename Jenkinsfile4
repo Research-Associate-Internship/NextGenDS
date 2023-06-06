@@ -64,7 +64,7 @@ pipeline {
                 sh "sed -i 's/devsecops-registry/devsecops-registry:v${BUILD_NUMBER}/g' deployment.yml"
                 }
             withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                //sh 'kubectl apply -f deployment.yml'
+                sh 'kubectl apply -f deployment.yml'
                 sh 'kubectl apply -f service-internal.yml'
                 sh 'kubectl apply -f ingress.yml'
                     
