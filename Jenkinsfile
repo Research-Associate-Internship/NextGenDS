@@ -31,8 +31,8 @@ pipeline {
 
         stage('Push image to registry') {
             steps {
-                sh 'docker tag rac2-devsecops:latest 853931821519.dkr.ecr.us-east-1.amazonaws.com/rac2-devsecops:latest'
-                sh "docker push 853931821519.dkr.ecr.us-east-1.amazonaws.com/rac2-devsecops-registry:latest" 
+                sh 'docker tag rac2-devsecops:latest 853931821519.dkr.ecr.us-east-1.amazonaws.com/rac2-devsecops'
+                sh 'docker push 853931821519.dkr.ecr.us-east-1.amazonaws.com/devsecops-registry:v${BUILD_NUMBER}'
                 }         
             }
     }
