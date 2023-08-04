@@ -14,6 +14,7 @@ pipeline {
 
             stage('Build image') {
             steps {
+                dir("${WORKSPACE}/vote")
                 sh 'docker build -t 853931821519.dkr.ecr.us-east-1.amazonaws.com/rac2-devsecops-registry:v${BUILD_NUMBER} .'
                 
             }
