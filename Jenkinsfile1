@@ -1,0 +1,67 @@
+pipeline {
+    // define which exact agent you want to run these instructions
+    agent {
+        label 'workernode-rac2'
+    }
+
+    stages {
+       stage('Checkout') {
+            steps {
+                // Get some code from a GitHub repository
+                checkout scm 
+            }
+        }
+
+        stage("Set up kube config") {
+          steps {
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                sh 'aws eks --region us-east-1 update-kubeconfig --name Rac2-NextGenDS-cluster'
+            }
+          }
+        }
+
+
+        stage("ecr authentication") {
+          steps {
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    dir("${WORKSPACE}/kubernetes") {
+                    sh 'kubectl create secret docker-registry ecr-secret \
+                        --docker-server=${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com \
+                        --docker-username=AWS \
+                        --docker-password=$(aws ecr get-login-password) \
+                        --namespace=default'
+                    }
+            }
+          }
+        }
+        
+        stage("kubernetes deployment") {
+          steps {
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    dir("${WORKSPACE}/k8s-specifications") {
+                    sh 'kubectl apply -f db-deployment.yaml'
+                    sh 'kubectl apply -f db-service.yaml'
+                    sh 'kubectl apply -f redis-service.yaml'
+                    sh 'kubectl apply -f redis-deployment.yaml'
+                    sh 'kubectl apply -f result-service.yaml'
+                    sh 'kubectl apply -f result-deployment.yaml'
+                    sh 'kubectl apply -f vote-deployment.yaml'
+                    sh 'kubectl apply -f vote-service.yaml'
+                    }
+            }
+          }
+        }
+
+    } 
+
+    post{
+        always {  
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+            sh 'kubectl delete secret ecr-secret'
+            }
+            cleanWs()
+
+        }      
+    }
+
+}
